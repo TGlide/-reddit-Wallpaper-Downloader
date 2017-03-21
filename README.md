@@ -22,6 +22,16 @@ Simply run main.py to fetch and set new wallpapers.
 
 To run at startup, create a main.py shortcut, and link it to the Windows Startup Applications.
 
+## Contributing
+Pull requests and bug reports are accepted, just be educated please :)
+
+## Planned Features
+- [ ] Convert imgur links to image links using imgur api
+- [ ] Detect slashes and correct links using string manipulation
+
+
+## Authors
+- TGLIDE: Everything for now
 
 ## License
 This project is licensed under the GNU GNL v3 License - See LICENSE.md for details.
