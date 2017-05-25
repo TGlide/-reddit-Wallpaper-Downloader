@@ -59,7 +59,7 @@ else:
         wallpapers_downloaded = wallpapers_downloaded.split("\n")
         wallpapers_downloaded = list(filter(None, wallpapers_downloaded))
 
-# Also makes a error_log and a list for handling_errors
+# Makes a error_log and a list for handling_errors
 error_file = 'error_log.txt'
 errors_log = []
 
@@ -94,7 +94,6 @@ for submission in subreddit.hot(limit=20):
             continue
         new_wp_count += 1
         print("{0} downloaded...".format(the_url))
-
 print("Downloaded {0} new wallpapers!".format(new_wp_count))
 
 # Write wallpapers saved to avoid repetition
@@ -108,9 +107,11 @@ with open(error_file, 'a') as f:
 # Apply random wallpaper from current day folder
 all_files = glob.glob(save_folder + "\\*.png")
 all_files.extend(glob.glob(save_folder + "\\*.jpg"))
+
 # Resizes image to current desktop res
 print("Resizing images...")
 resize_images(all_files)
+
 # Randomly applies wallpaper to desktop
 all_files = glob.glob(save_folder + "\\*.png")
 all_files.extend(glob.glob(save_folder + "\\*.jpg"))
