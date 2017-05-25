@@ -1,7 +1,19 @@
-import random, os, praw, urllib.request, datetime, glob, ctypes, struct, urllib, time, sys, PIL
+import random
+import os
+import praw
+import urllib.request
+import datetime
+import glob
+import ctypes
+import struct
+import urllib
+import time
+import sys
+import PIL
+
 from PIL import Image
 
-
+# Functions 
 def is_image(some_url):
     """Defines if a url is an image"""
     if some_url[-4:] != '.jpg' and some_url[-4:] != '.png':
@@ -37,9 +49,7 @@ def resize_images(files):
             the_img.resize((int(1366), int(((1366 * int(the_img.size[1])) / int(the_img.size[0])))), Image.ANTIALIAS)
         the_img.save(img)
 
-
 # Make a file_name and a list holding the wallpapers that were already downloaded, as to avoid repetition.
-# Also makes a error_log and a list for handling_errors
 file_name = 'wallpapers_downloaded.txt'
 if not os.path.isfile(file_name):
     wallpapers_downloaded = []
@@ -48,6 +58,8 @@ else:
         wallpapers_downloaded = f.read()
         wallpapers_downloaded = wallpapers_downloaded.split("\n")
         wallpapers_downloaded = list(filter(None, wallpapers_downloaded))
+
+# Also makes a error_log and a list for handling_errors
 error_file = 'error_log.txt'
 errors_log = []
 
@@ -61,6 +73,7 @@ d_m_y = "{0}.{1}.{2}".format(current_date.day, current_date.month, current_date.
 save_folder = os.getcwd() + "\data\\" + "wallpapers\\" + d_m_y + "\\"
 if not os.path.exists(save_folder):
     os.makedirs(save_folder)
+    
 # Download wallpapers from hot posts of the day
 print("Fetching wallpapers...")
 new_wp_count = 0
@@ -68,15 +81,12 @@ error_count = 0
 for submission in subreddit.hot(limit=20):
     if submission.url not in wallpapers_downloaded:
         wallpapers_downloaded.append(submission.url)
-        # Does it end in png/jpg or not? If yes: continue, else: put a .png at the end.
-        if is_image(submission.url):
+        if is_image(submission.url):     # Does it end in png/jpg or not? If yes: continue, else: put a .png at the end.
             the_url = submission.url
         else:
             the_url = submission.url + ".png"
-        # Try downloading
-        try:
+        try:    # Tries to download, catches forbidden or invalid link errors
             urllib.request.urlretrieve(the_url, save_folder + str(submission.id) + the_url[-4:])
-        # If it fails, put an error in the error log
         except (urllib.error.HTTPError, urllib.error.URLError) as e:
             the_error = "{1} - {0}".format(the_url, e)
             print(the_error)
@@ -98,8 +108,10 @@ with open(error_file, 'a') as f:
 # Apply random wallpaper from current day folder
 all_files = glob.glob(save_folder + "\\*.png")
 all_files.extend(glob.glob(save_folder + "\\*.jpg"))
+# Resizes image to current desktop res
 print("Resizing images...")
 resize_images(all_files)
+# Randomly applies wallpaper to desktop
 all_files = glob.glob(save_folder + "\\*.png")
 all_files.extend(glob.glob(save_folder + "\\*.jpg"))
 rng = random.Random()
