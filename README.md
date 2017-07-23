@@ -31,7 +31,7 @@ Pull requests and bug reports are accepted, just be educated please :)
 
 
 ## Authors
-- TGLIDE: Everything for now
+- TGLIDE
 
 ## License
 This project is licensed under the GNU GNL v3 License - See LICENSE.md for details.
