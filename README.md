@@ -13,7 +13,7 @@ With Python installed, simply install PRAW (The reddit API) by typing the follow
 
 If the program states that the Reddit API is outdated, simply run:
 
-`pip install praw --upgrade`
+`pip install --upgrade praw`
 
 Having done that, clone the repository into the desired folder.
 
