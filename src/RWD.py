@@ -112,7 +112,7 @@ class RWDDownloader(QtCore.QThread):
         old_wp_count = get_current_count(save_folder)
         new_wp_count = 0
         the_urls = []
-        for submission in subreddit.hot(limit=10):
+        for submission in subreddit.hot(limit=30):
             if submission.url not in wallpapers_downloaded:
                 self.url_message.emit("Fetching links...")
                 wallpapers_downloaded.append(submission.url)
