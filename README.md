@@ -16,6 +16,7 @@ If the program states that the Reddit API is outdated, simply run:
 `pip install --upgrade praw`
 
 Also install PyQt 5 running the following on the console:
+
 `pip install pyqt5`
 
 Having done that, clone the repository into the desired folder, and it's ready for use!
