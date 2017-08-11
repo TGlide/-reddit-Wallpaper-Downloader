@@ -1,4 +1,3 @@
-import random
 import os
 import praw
 import urllib.request
@@ -7,17 +6,15 @@ import glob
 import ctypes
 import struct
 import urllib
-import time
 import sys
-import PIL
 import re
 
 from PIL import Image
-from PyQt5 import QtCore, QtGui
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit,
-                             QInputDialog, QApplication, QLabel,
-                             QHBoxLayout, QVBoxLayout, QMainWindow)
-from PyQt5.QtGui import QIcon, QPixmap
+                             QApplication, QLabel, QHBoxLayout,
+                             QVBoxLayout, QMainWindow, QScrollArea)
+from PyQt5.QtGui import QIcon, QPixmap, QColor
 
 
 def is_image(some_url):
@@ -100,6 +97,27 @@ if not os.path.exists(save_folder):
 
 
 # App Classes
+class ImageLabel(QLabel):
+    """Adaptation of QLabel, as to show an image and change that image to the current wallpaper when clicked."""
+
+    def __init__(self, the_image):
+        super().__init__()
+        self.the_image = the_image
+        self.setPixmap(QPixmap(the_image).scaled(150, 100))
+
+    def mouseReleaseEvent(self, QMouseEvent):
+        sys_param_info = get_sys_parameters_info()
+        sys_param_info(20, 0, self.the_image, 3)
+
+
+class BlankImageLabel(QLabel):
+    def __init__(self):
+        super().__init__()
+        self.the_pixmap = QPixmap(150, 100)
+        self.the_pixmap.fill(QColor(0, 0, 0, 0))
+        self.setPixmap(self.the_pixmap)
+
+
 class RWDDownloader(QtCore.QThread):
     """PyQT Thread responsible for the downloading of the wallpapers"""
     url_message = QtCore.pyqtSignal("QString")
@@ -178,6 +196,7 @@ class RWDResizer(QtCore.QThread):
 
 class RWDWidgetDownload(QWidget):
     """PyQt Widget containing the donwload and resizing action."""
+
     def __init__(self, app_window, main_widget):
         super().__init__()
 
@@ -207,17 +226,14 @@ class RWDWidgetDownload(QWidget):
         l_box.addWidget(login_label)
         l_box.addSpacing(password_label.sizeHint().width() - login_label.sizeHint().width())
         l_box.addWidget(self.login_text)
-        l_box.addStretch(1)
 
         p_box = QHBoxLayout()
         p_box.addWidget(password_label)
         p_box.addWidget(self.password_text)
-        p_box.addStretch(1)
 
         d_box = QHBoxLayout()
         d_box.addSpacing(80)
         d_box.addWidget(self.download_button)
-        d_box.addStretch(1)
 
         v_box = QVBoxLayout()
         v_box.addLayout(l_box)
@@ -238,20 +254,9 @@ class RWDWidgetDownload(QWidget):
         self.resize_thread.start()
 
 
-class ImageLabel(QLabel):
-    """Adaptation of QLabel, as to show an image and change that image to the current wallpaper when clicked."""
-    def __init__(self, the_image):
-        super().__init__()
-        self.the_image = the_image
-        self.setPixmap(QPixmap(the_image).scaled(150, 100))
-
-    def mouseReleaseEvent(self, QMouseEvent):
-        sys_param_info = get_sys_parameters_info()
-        sys_param_info(20, 0, self.the_image, 3)
-
-
 class RWDWidgetSelector(QWidget):
     """PyQt Widget responsible for showing the downloaded wallpapers so the user can select them."""
+
     def __init__(self, app_window, main_widget):
         super().__init__()
         self.main_w = app_window
@@ -260,44 +265,60 @@ class RWDWidgetSelector(QWidget):
         self.resize_thread = main_widget.resize_thread
         self.resize_thread.finished.connect(self.display_images)
 
-        self.vert_layout = QVBoxLayout()
         self.hor_layouts = []
-        for i in range(3):
-            self.hor_layouts.append(QHBoxLayout())
-            self.vert_layout.addLayout(self.hor_layouts[-1])
+
+        # List Box
+        self.listBox = QVBoxLayout(self)
+        self.setLayout(self.listBox)
+
+        # Putting the scrollable area inside the list box
+        scroll = QScrollArea(self)
+        self.listBox.addWidget(scroll)
+        scroll.setWidgetResizable(True)
+        self.scroll_content = QWidget(scroll)
+
+        # Setting the layout for the scrollable area
+        self.scroll_layout = QVBoxLayout()
+        self.scroll_content.setLayout(self.scroll_layout)
+        scroll.setWidget(self.scroll_content)
 
     def display_images(self):
+        # Get wallpaper filenames
         all_files = glob.glob(save_folder + "\\*.png")
         all_files.extend(glob.glob(save_folder + "\\*.jpg"))
         numb_of_files = len(all_files)
-        if numb_of_files % 3 == 0:
-            the_numb = numb_of_files // 3
-        else:
-            the_numb = numb_of_files // 3 + 1
-        count = 0
-        for row in range(3):
-            for i in range(the_numb):
-                count += 1
-                some_label = ImageLabel(all_files[count - 1])
-                self.hor_layouts[row].addWidget(some_label)
-                if count >= numb_of_files:
-                    break
-        self.setLayout(self.vert_layout)
+        # Display the wallpapers
+        for i in range(numb_of_files):
+            if i % 3 == 0:
+                self.hor_layouts.append(QHBoxLayout())
+                self.scroll_layout.addLayout(self.hor_layouts[-1])
+            some_label = ImageLabel(all_files[i])
+            self.hor_layouts[-1].addWidget(some_label)
+            if i % 3 != 2:
+                self.hor_layouts[-1].addStretch(1)
+        # Align and set layout
+        for j in range(3 - (numb_of_files % 3)):
+            self.hor_layouts[-1].addWidget(BlankImageLabel())
+            if j != (3 - (numb_of_files % 3)) - 1:
+                self.hor_layouts[-1].addStretch(1)
 
 
 class RWDMainWidget(QWidget):
     """PyQt Widget that joins RWDWidgetDownload and RWDWidgetSelector."""
+
     def __init__(self, app_window):
         super().__init__()
         self.main_w = app_window
         self.st_bar = self.main_w.statusBar()
 
         self.download_thread = RWDDownloader(self)
-
         self.resize_thread = RWDResizer()
 
+        self.download_widget = RWDWidgetDownload(app_window, self)
+        self.download_widget.setMaximumWidth(300)
+
         self.w_layout = QHBoxLayout()
-        self.w_layout.addWidget(RWDWidgetDownload(app_window, self))
+        self.w_layout.addWidget(self.download_widget)
         self.w_layout.addWidget(RWDWidgetSelector(app_window, self))
 
         self.setLayout(self.w_layout)
@@ -305,12 +326,13 @@ class RWDMainWidget(QWidget):
 
 class RWDApp(QMainWindow):
     """Main window for the GUI"""
+
     def __init__(self):
         super().__init__()
         self.main_widget = RWDMainWidget(self)
         self.setCentralWidget(self.main_widget)
 
-        self.setGeometry(300, 300, 500, 150)
+        self.setGeometry(300, 300, 900, 500)
         self.setWindowTitle('RWD')
         self.setWindowIcon(QIcon(os.getcwd() + '//assets//Reddit-icon.png'))
         self.statusBar().showMessage("Welcome!")
