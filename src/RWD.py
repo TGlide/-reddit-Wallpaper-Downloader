@@ -47,8 +47,8 @@ def resize_image(file):
         except PermissionError as e:
             print(e)
         return
-    the_img = \
-        the_img.resize((int(1366), int(((1366 * int(the_img.size[1])) / int(the_img.size[0])))), Image.ANTIALIAS)
+    the_img = the_img.resize((int(1366), int(768)), Image.ANTIALIAS)
+    # the_img.resize((int(1366), int(((1366 * int(the_img.size[1])) / int(the_img.size[0])))), Image.ANTIALIAS)
     the_img.save(file)
 
 
@@ -297,10 +297,12 @@ class RWDWidgetSelector(QWidget):
             if i % 3 != 2:
                 self.hor_layouts[-1].addStretch(1)
         # Align and set layout
-        for j in range(3 - (numb_of_files % 3)):
-            self.hor_layouts[-1].addWidget(BlankImageLabel())
-            if j != (3 - (numb_of_files % 3)) - 1:
-                self.hor_layouts[-1].addStretch(1)
+        remainder = numb_of_files % 3
+        if remainder > 0:
+            for j in range(3 - remainder):
+                self.hor_layouts[-1].addWidget(BlankImageLabel())
+                if j != (3 - remainder) - 1:
+                    self.hor_layouts[-1].addStretch(1)
 
 
 class RWDMainWidget(QWidget):
