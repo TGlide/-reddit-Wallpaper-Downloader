@@ -1,4 +1,4 @@
-# Reddit Wallpaper Downloader
+# Reddit WallLoad
 This is a simple tool I've created for day to day use to fetch wallpapers from https://www.reddit.com/r/wallpapers/.
 
 - It fetches up to 30 wallpapers from the hot section, attempts to download them and puts in a folder with a time stamp. 
