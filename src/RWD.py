@@ -22,7 +22,7 @@ def is_image(some_url):
     if some_url[-4:] != '.jpg' and some_url[-4:] != '.png':
         return False
     else:
-        return True
+        return Tru
 
 
 def is_64_windows():
