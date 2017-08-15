@@ -2,7 +2,7 @@
 This is a simple tool I've created for day to day use to fetch wallpapers from https://www.reddit.com/r/wallpapers/.
 
 - It fetches up to 30 wallpapers from the hot section, attempts to download them and puts in a folder with a time stamp. 
-e.g. A wallpaper from 20/03/2017 would be in /folder_where_main.py_is_located/data/wallpapers/20.03.2017/
+e.g. A wallpaper from 19/03/2016 would be in /folder_where_RWD.py_is_located/data/wallpapers/19.03.2016/
 
 - After downloading them, it displays the images for you to choose (Windows Only)
 
