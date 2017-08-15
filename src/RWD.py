@@ -311,7 +311,7 @@ class RWDWidgetSelector(QWidget):
             self.hor_layouts[-1].addStretch(1)
 
     def display_images(self):
-        # Get wallpaper file names
+        # Get wallpaper file namess
         all_files = glob.glob(save_folder + "\\*.png")
         all_files.extend(glob.glob(save_folder + "\\*.jpg"))
         numb_of_files = len(all_files)
