@@ -13,7 +13,7 @@ from PIL import Image
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit,
                              QApplication, QLabel, QHBoxLayout,
-                             QVBoxLayout, QMainWindow, QScrollArea)
+                             QVBoxLayout, QMainWindow, QScrollArea, QWidgetItem)
 from PyQt5.QtGui import QIcon, QPixmap, QColor
 
 
@@ -67,22 +67,28 @@ def get_imgur_album_link(link):
 
 
 def get_current_count(folder):
-    return len(glob.glob(folder + "*"))
+    file_list = glob.glob(folder + "*")
+    biggest = 0
+    for i in file_list:
+        file_number = int(re.search('[\\\\](\d+)\.\w{3}', i).group(1))
+        if file_number > biggest:
+            biggest = file_number
+    return biggest
 
 
 # Make a file_name and a list holding the wallpapers that were already downloaded, as to avoid repetition.
 # Also makes a error_log and a list for handling_errors
-file_name = 'wallpapers_downloaded.txt'
-if not os.path.isfile(file_name):
+wp_dll_save_file = 'wallpapers_downloaded.txt'
+if not os.path.isfile(wp_dll_save_file):
     wallpapers_downloaded = []
 else:
-    with open(file_name, "r") as f:
+    with open(wp_dll_save_file, "r") as f:
         wallpapers_downloaded = f.read()
         wallpapers_downloaded = wallpapers_downloaded.split("\n")
         wallpapers_downloaded = list(filter(None, wallpapers_downloaded))
 
-error_file = 'error_log.txt'
-errors_log = []
+error_save_file = 'error_log.txt'
+error_list = []
 
 # PRAW instances
 reddit = praw.Reddit('bot1')
@@ -99,6 +105,7 @@ if not os.path.exists(save_folder):
 # App Classes
 class ImageLabel(QLabel):
     """Adaptation of QLabel, as to show an image and change that image to the current wallpaper when clicked."""
+    apply_signal = QtCore.pyqtSignal("QString")
 
     def __init__(self, the_image):
         super().__init__()
@@ -106,8 +113,7 @@ class ImageLabel(QLabel):
         self.setPixmap(QPixmap(the_image).scaled(150, 100))
 
     def mouseReleaseEvent(self, QMouseEvent):
-        sys_param_info = get_sys_parameters_info()
-        sys_param_info(20, 0, self.the_image, 3)
+        self.apply_signal.emit(self.the_image)
 
 
 class BlankImageLabel(QLabel):
@@ -118,19 +124,23 @@ class BlankImageLabel(QLabel):
         self.setPixmap(self.the_pixmap)
 
 
-class RWDDownloader(QtCore.QThread):
+class RWDThreadDownloader(QtCore.QThread):
     """PyQT Thread responsible for the downloading of the wallpapers"""
     url_message = QtCore.pyqtSignal("QString")
+    enable_button = QtCore.pyqtSignal(bool)
+    image_to_display = QtCore.pyqtSignal("QString")
 
     def __init__(self, the_widget):
         super().__init__()
         self.st_bar = the_widget.st_bar
 
     def run(self):
+        # Counting used for naming the wallpapers
         old_wp_count = get_current_count(save_folder)
         new_wp_count = 0
+
         the_urls = []
-        for submission in subreddit.hot(limit=30):
+        for submission in subreddit.hot(limit=20):
             if submission.url not in wallpapers_downloaded:
                 self.url_message.emit("Fetching links...")
                 wallpapers_downloaded.append(submission.url)
@@ -150,48 +160,50 @@ class RWDDownloader(QtCore.QThread):
         for the_url in the_urls:
             self.url_message.emit("Downloading {0}...".format(the_url))
             try:
-                urllib.request.urlretrieve(the_url, save_folder + str(new_wp_count + old_wp_count + 1) + the_url[-4:])
-                wallpapers_downloaded.append("{0} - {1}:".format(d_m_y, str(new_wp_count + 1)))
+                current_count = new_wp_count + old_wp_count + 1
+                urllib.request.urlretrieve(the_url, save_folder + str(current_count) + the_url[-4:])
+                wallpapers_downloaded.append("{0} - {1}:".format(d_m_y, str(current_count)))
                 wallpapers_downloaded.append(the_url)
                 new_wp_count += 1
                 self.url_message.emit("{0} downloaded!".format(the_url))
+                self.image_to_display.emit(save_folder + str(current_count) + the_url[-4:])
             except (urllib.error.HTTPError, urllib.error.URLError) as e:
                 the_error = "{1} - {0}".format(the_url, e)
                 self.url_message.emit(the_error)
-                errors_log.append(the_error + " - {0}".format(d_m_y))
+                error_list.append(the_error + " - {0}".format(d_m_y))
                 continue
             self.sleep(1)
 
         self.url_message.emit("Downloaded {0} new wallpapers!".format(new_wp_count))
         self.sleep(1)
         # Write wallpapers saved to avoid repetition
-        with open(file_name, 'w') as f:
+        with open(wp_dll_save_file, 'w') as wp_dll_f:
             for i in wallpapers_downloaded:
-                f.write(i + "\n")
-        with open(error_file, 'a') as f:
-            for i in errors_log:
-                f.write(i + "\n")
+                wp_dll_f.write(i + "\n")
+        with open(error_save_file, 'a') as error_f:
+            for i in error_list:
+                error_f.write(i + "\n")
+        self.enable_button.emit(True)
 
 
-class RWDResizer(QtCore.QThread):
+class RWDThreadResizer(QtCore.QThread):
     """PyQt Thread responsible for resizing the wallpapers down to size."""
     st_message = QtCore.pyqtSignal("QString")
 
     def __init__(self):
         super().__init__()
         self.count = 0
+        self.image = ""
+
+    def apply_image(self, the_image):
+        self.image = the_image
+        self.start()
 
     def run(self):
-        self.count = 0
-        # Apply random wallpaper from current day folder
-        all_files = glob.glob(save_folder + "\\*.png")
-        all_files.extend(glob.glob(save_folder + "\\*.jpg"))
-        self.st_message.emit("Resizing images...")
-        for some_file in all_files:
-            self.count += 1
-            resize_image(some_file)
-            self.st_message.emit("Resized {0} wallpapers...".format(self.count))
-        self.st_message.emit("All Done!")
+        resize_image(self.image)
+        sys_param_info = get_sys_parameters_info()
+        sys_param_info(20, 0, self.image, 3)
+        self.st_message.emit("Applied wallpaper")
 
 
 class RWDWidgetDownload(QWidget):
@@ -203,12 +215,7 @@ class RWDWidgetDownload(QWidget):
         self.main_w = app_window
         self.st_bar = self.main_w.statusBar()
 
-        self.download_thread = main_widget.download_thread
-        self.download_thread.url_message.connect(self.st_bar.showMessage)
-        self.download_thread.finished.connect(self.resize_imgs)
-
-        self.resize_thread = main_widget.resize_thread
-        self.resize_thread.st_message.connect(self.st_bar.showMessage)
+        self.selector_widget = main_widget.selector_widget
 
         login_label = QLabel("Login:")
         password_label = QLabel("Password:")
@@ -221,6 +228,12 @@ class RWDWidgetDownload(QWidget):
         self.download_button = QPushButton('Download', self)
         self.download_button.setMinimumHeight(50)
         self.download_button.clicked.connect(self.download)
+
+        # self.stop_button = QPushButton('Stop', self) TODO
+
+        self.download_thread = main_widget.download_thread
+        self.download_thread.enable_button.connect(self.download_button.setEnabled)
+        self.resize_thread = main_widget.resize_thread
 
         l_box = QHBoxLayout()
         l_box.addWidget(login_label)
@@ -247,11 +260,8 @@ class RWDWidgetDownload(QWidget):
     def download(self):
         # Download wallpapers from hot posts of the day
         self.st_bar.showMessage("Fetching wallpapers...")
+        self.download_button.setEnabled(False)
         self.download_thread.start()
-
-    def resize_imgs(self):
-        self.st_bar.showMessage("Resizing images...")
-        self.resize_thread.start()
 
 
 class RWDWidgetSelector(QWidget):
@@ -259,53 +269,82 @@ class RWDWidgetSelector(QWidget):
 
     def __init__(self, app_window, main_widget):
         super().__init__()
-        self.main_w = app_window
-        self.st_bar = self.main_w.statusBar()
+        self.main_window = app_window
+        self.st_bar = self.main_window.statusBar()
 
+        # Threads
+        self.download_thread = main_widget.download_thread
+        self.download_thread.image_to_display.connect(self.display_image)
+        self.download_thread.finished.connect(self.display_images)
         self.resize_thread = main_widget.resize_thread
-        self.resize_thread.finished.connect(self.display_images)
 
+        # Labels
+        self.image_labels = []
+        self.images = []
+
+        # Layouts
         self.hor_layouts = []
-
         # List Box
         self.listBox = QVBoxLayout(self)
         self.setLayout(self.listBox)
-
         # Putting the scrollable area inside the list box
         scroll = QScrollArea(self)
         self.listBox.addWidget(scroll)
         scroll.setWidgetResizable(True)
         self.scroll_content = QWidget(scroll)
-
         # Setting the layout for the scrollable area
         self.scroll_layout = QVBoxLayout()
         self.scroll_content.setLayout(self.scroll_layout)
         scroll.setWidget(self.scroll_content)
 
+    def display_image(self, the_image):
+        # TODO: Detect corrupted images
+        starting_count = len(self.image_labels)
+        if starting_count % 3 == 0:  # New row
+            self.hor_layouts.append(QHBoxLayout())
+            self.scroll_layout.addLayout(self.hor_layouts[-1])
+        self.images.append(the_image)
+        self.image_labels.append(ImageLabel(the_image))
+        self.image_labels[-1].apply_signal.connect(self.apply_image)
+        self.hor_layouts[-1].addWidget(self.image_labels[-1])
+        if starting_count % 3 != 2:  # Spaces in between images
+            self.hor_layouts[-1].addStretch(1)
+
     def display_images(self):
-        # Get wallpaper filenames
+        # Get wallpaper file names
         all_files = glob.glob(save_folder + "\\*.png")
         all_files.extend(glob.glob(save_folder + "\\*.jpg"))
         numb_of_files = len(all_files)
+
         # Display the wallpapers
-        for i in range(numb_of_files):
-            if i % 3 == 0:
-                self.hor_layouts.append(QHBoxLayout())
-                self.scroll_layout.addLayout(self.hor_layouts[-1])
-            some_label = ImageLabel(all_files[i])
-            self.hor_layouts[-1].addWidget(some_label)
-            if i % 3 != 2:
-                self.hor_layouts[-1].addStretch(1)
-        # Align and set layout
-        remainder = numb_of_files % 3
-        if remainder > 0:
-            for j in range(3 - remainder):
-                self.hor_layouts[-1].addWidget(BlankImageLabel())
-                if j != (3 - remainder) - 1:
+        for i in all_files:
+            if i not in self.images:
+                starting_count = len(self.image_labels)
+                if starting_count % 3 == 0:  # New row
+                    self.hor_layouts.append(QHBoxLayout())
+                    self.scroll_layout.addLayout(self.hor_layouts[-1])
+                self.images.append(i)
+                self.image_labels.append(ImageLabel(i))
+                self.image_labels[-1].apply_signal.connect(self.apply_image)
+                self.hor_layouts[-1].addWidget(self.image_labels[-1])
+                if starting_count % 3 != 2:  # Spaces in between images
                     self.hor_layouts[-1].addStretch(1)
 
+        # Align layout
+        remainder = 3
+        for i in range(self.hor_layouts[-1].count()):
+            if type(self.hor_layouts[-1].itemAt(i)) == QWidgetItem:
+                remainder -= 1
+        for j in range(remainder):
+            self.hor_layouts[-1].addWidget(BlankImageLabel())
+            if j != remainder - 1:
+                self.hor_layouts[-1].addStretch(1)
 
-class RWDMainWidget(QWidget):
+    def apply_image(self, the_image):
+        self.resize_thread.apply_image(the_image)
+
+
+class RWDWidgetMain(QWidget):
     """PyQt Widget that joins RWDWidgetDownload and RWDWidgetSelector."""
 
     def __init__(self, app_window):
@@ -313,15 +352,19 @@ class RWDMainWidget(QWidget):
         self.main_w = app_window
         self.st_bar = self.main_w.statusBar()
 
-        self.download_thread = RWDDownloader(self)
-        self.resize_thread = RWDResizer()
+        self.download_thread = RWDThreadDownloader(self)
+        self.download_thread.url_message.connect(self.st_bar.showMessage)
+        self.resize_thread = RWDThreadResizer()
+        self.resize_thread.st_message.connect(self.st_bar.showMessage)
+
+        self.selector_widget = RWDWidgetSelector(app_window, self)
 
         self.download_widget = RWDWidgetDownload(app_window, self)
         self.download_widget.setMaximumWidth(300)
 
         self.w_layout = QHBoxLayout()
         self.w_layout.addWidget(self.download_widget)
-        self.w_layout.addWidget(RWDWidgetSelector(app_window, self))
+        self.w_layout.addWidget(self.selector_widget)
 
         self.setLayout(self.w_layout)
 
@@ -331,7 +374,7 @@ class RWDApp(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.main_widget = RWDMainWidget(self)
+        self.main_widget = RWDWidgetMain(self)
         self.setCentralWidget(self.main_widget)
 
         self.setGeometry(300, 300, 900, 500)
