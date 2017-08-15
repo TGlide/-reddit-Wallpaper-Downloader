@@ -76,7 +76,7 @@ def get_current_count(folder):
     return biggest
 
 
-# Make a file_name and a list holding the wallpapers that were already downloaded, as to avoid repetition.
+# Make a file_name and a list holding the wallpapers that were already downloaded, as to avoid repetition. yay
 # Also makes a error_log and a list for handling_errors
 wp_dll_save_file = 'wallpapers_downloaded.txt'
 if not os.path.isfile(wp_dll_save_file):
