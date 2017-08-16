@@ -22,7 +22,7 @@ def is_image(some_url):
     if some_url[-4:] != '.jpg' and some_url[-4:] != '.png':
         return False
     else:
-        return Tru
+        return True
 
 
 def is_64_windows():
@@ -76,7 +76,7 @@ def get_current_count(folder):
     return biggest
 
 
-# Make a file_name and a list holding the wallpapers that were already downloaded, as to avoid repetition. yay
+# Make a file_name and a list holding the wallpapers that were already downloaded, as to avoid repetition.
 # Also makes a error_log and a list for handling_errors
 wp_dll_save_file = 'wallpapers_downloaded.txt'
 if not os.path.isfile(wp_dll_save_file):
@@ -311,7 +311,7 @@ class RWDWidgetSelector(QWidget):
             self.hor_layouts[-1].addStretch(1)
 
     def display_images(self):
-        # Get wallpaper file namess
+        # Get wallpaper file names
         all_files = glob.glob(save_folder + "\\*.png")
         all_files.extend(glob.glob(save_folder + "\\*.jpg"))
         numb_of_files = len(all_files)
