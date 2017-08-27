@@ -1,4 +1,5 @@
 # Reddit WallLoad
+[![built with Python3](https://img.shields.io/badge/Built%20with-Python%203-red.svg)](https://www.python.org/)
 This is a simple tool I've created for day to day use to fetch wallpapers from https://www.reddit.com/r/wallpapers/.
 
 - It fetches wallpapers from the hot section, attempts to download them and puts in a folder with a time stamp. 
