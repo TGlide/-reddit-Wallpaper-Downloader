@@ -1,5 +1,8 @@
 # Reddit WallLoad
-[![built with Python3](https://img.shields.io/badge/Built%20with-Python%203-red.svg)](https://www.python.org/)
+[![Built with Python3](https://img.shields.io/badge/Built%20with-Python%203-red.svg)](https://www.python.org/)
+[![GUI built with PyQt5](https://img.shields.io/badge/GUI%20built%20with-PyQt5-29B6F6.svg)](https://pypi.python.org/pypi/PyQt5)
+[![License GPL-3.0+](https://img.shields.io/badge/License-GPL--3.0%2B-7E57C2.svg)](./LICENSE.md)
+
 
 ## Description
 This is a simple tool I've created for day to day use to fetch wallpapers from https://www.reddit.com/r/wallpapers/.
@@ -46,4 +49,4 @@ Contributions are greatly appreciated, feel free to make pull requests as to dis
 - TGLIDE
 
 ## License
-This project is licensed under the GNU GNL v3 License - See LICENSE.md for details.
+This project is licensed under the [GNU GPL v3 License](./LICENSE.md)
