@@ -13,7 +13,7 @@ e.g. A wallpaper from 19/03/2016 would be in /folder_where_RWD.py_is_located/dat
 - After downloading them, it displays the images for you to choose (Windows Only)
 
 ## Installation and Updating
-With [Python](https://www.python.org/downloads/) installed, simply install PRAW (The reddit API) by typing the following on the console(CMD):
+With [Python 3](https://www.python.org/downloads/) installed, simply install PRAW (The reddit API) by typing the following on the console(CMD):
 
 `pip install praw`
 
