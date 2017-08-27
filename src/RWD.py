@@ -1,20 +1,21 @@
-import os
-import praw
-import urllib.request
+import ctypes
 import datetime
 import glob
-import ctypes
-import struct
-import urllib
-import sys
+import os
 import re
+import struct
+import sys
+import urllib
+import urllib.request
 
+import praw
 from PIL import Image
 from PyQt5 import QtCore
+from PyQt5.QtGui import QIcon, QPixmap, QColor
 from PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit,
                              QApplication, QLabel, QHBoxLayout,
-                             QVBoxLayout, QMainWindow, QScrollArea, QWidgetItem)
-from PyQt5.QtGui import QIcon, QPixmap, QColor
+                             QVBoxLayout, QMainWindow, QScrollArea,
+                             QWidgetItem)
 
 
 def is_image(some_url):
@@ -130,9 +131,10 @@ class RWDThreadDownloader(QtCore.QThread):
     enable_button = QtCore.pyqtSignal(bool)
     image_to_display = QtCore.pyqtSignal("QString")
 
-    def __init__(self, the_widget):
+    def __init__(self, main_widget):
         super().__init__()
-        self.st_bar = the_widget.st_bar
+        self.st_bar = main_widget.st_bar
+        self.main_widget = main_widget
 
     def run(self):
         # Counting used for naming the wallpapers
@@ -219,11 +221,15 @@ class RWDWidgetDownload(QWidget):
 
         login_label = QLabel("Login:")
         password_label = QLabel("Password:")
+        subreddit_label = QLabel("Subreddit:")
 
         self.login_text = QLineEdit(self)
         self.login_text.resize(self.login_text.sizeHint())
         self.password_text = QLineEdit(self)
         self.password_text.resize(self.password_text.sizeHint())
+        self.subreddit_text = QLineEdit(self)    # TODO: Implement properly
+        self.subreddit_text.insert("wallpapers")
+        self.subreddit_text.resize(self.subreddit_text.sizeHint())
 
         self.download_button = QPushButton('Download', self)
         self.download_button.setMinimumHeight(50)
@@ -244,6 +250,12 @@ class RWDWidgetDownload(QWidget):
         p_box.addWidget(password_label)
         p_box.addWidget(self.password_text)
 
+        s_box = QHBoxLayout()
+        s_box.addSpacing(80)
+        s_box.addWidget(subreddit_label)
+        s_box.addSpacing(password_label.sizeHint().width() - subreddit_label.sizeHint().width())
+        s_box.addWidget(self.subreddit_text)
+
         d_box = QHBoxLayout()
         d_box.addSpacing(80)
         d_box.addWidget(self.download_button)
@@ -252,6 +264,7 @@ class RWDWidgetDownload(QWidget):
         v_box.addLayout(l_box)
         v_box.addLayout(p_box)
         v_box.addStretch(1)
+        v_box.addLayout(s_box)
         v_box.addLayout(d_box)
         v_box.addStretch(1)
 
@@ -314,7 +327,6 @@ class RWDWidgetSelector(QWidget):
         # Get wallpaper file names
         all_files = glob.glob(save_folder + "\\*.png")
         all_files.extend(glob.glob(save_folder + "\\*.jpg"))
-        numb_of_files = len(all_files)
 
         # Display the wallpapers
         for i in all_files:
