@@ -24,15 +24,14 @@ Having done that, clone the repository into the desired folder, and it's ready f
 ## Usage
 Simply run RWD.py to fetch and set new wallpapers. 
 
-To run at startup, create a RWD.py shortcut, and link it to the Windows Startup Applications.
-
 If you wish for the program to run without displaying the python console, simply rename RWD.py to RWD.pyw. (For windows only)
 
 ## Contributing
-Pull requests and bug reports are accepted, just be educated please :)
+Contributions are greatly appreciated, feel free to make pull requests as to discuss and implement any changes/features you've developed.
 
 ## Planned Features
-- [x] Convert imgur links to image links using imgur api
+- [x] Convert imgur links to image links
+- [ ] Linux and OSX support
 - [ ] Detect slashes and correct links using string manipulation
 - [ ] Add upvote buttons for each wallpaper
 - [ ] Add delete option for each wallpaper
