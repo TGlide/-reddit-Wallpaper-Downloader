@@ -41,7 +41,7 @@ Contributions are greatly appreciated, feel free to make pull requests as to dis
 - [ ] Detect slashes and correct links using string manipulation
 - [ ] Add upvote buttons for each wallpaper
 - [ ] Add delete option for each wallpaper
-- [ ] Add subreddit chooser
+- [x] Add subreddit chooser
 - [ ] Add favorites section
 
 
