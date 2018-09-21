@@ -37,11 +37,11 @@ Contributions are greatly appreciated, feel free to make pull requests as to dis
 
 ## Planned Features
 - [x] Convert imgur links to image links
-- [ ] Linux and OSX support
+- [x] Add subreddit chooser
+- [x] Linux and OSX support
 - [ ] Detect slashes and correct links using string manipulation
 - [ ] Add upvote buttons for each wallpaper
 - [ ] Add delete option for each wallpaper
-- [x] Add subreddit chooser
 - [ ] Add favorites section
 
 
